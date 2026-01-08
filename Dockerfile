@@ -1,0 +1,31 @@
+# Build stage
+FROM node:20-alpine AS build
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+# Get branch and patch level, then create patch.txt file
+RUN DATE=$(date "+%Y-%m-%d:%H:%M:%S") && \
+    echo $DATE > ./dist/patch.txt
+
+# Deployment stage
+FROM nginx:stable-alpine as deploy
+
+# Default Environment Variable values
+ENV API_HOST=localhost
+ENV API_PORT=8083
+
+# Copy built assets from build stage to nginx serving directory
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+
+# Expose port
+EXPOSE 80
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
+
