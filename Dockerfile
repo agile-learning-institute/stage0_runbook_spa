@@ -13,7 +13,7 @@ RUN DATE=$(date "+%Y-%m-%d:%H:%M:%S") && \
     echo $DATE > ./dist/patch.txt
 
 # Deployment stage
-FROM nginx:stable-alpine as deploy
+FROM nginx:stable-alpine AS deploy
 
 # Default Environment Variable values
 ENV API_HOST=localhost

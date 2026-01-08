@@ -1,0 +1,37 @@
+services:
+  ##################################
+  # Stage0 Runbook API Service
+  ##################################
+  api:
+    image: ghcr.io/agile-learning-institute/stage0_runner:latest
+    restart: no
+    ports:
+      - 8083:8083
+    environment:
+      API_PORT: 8083
+      RUNBOOKS_DIR: .
+    volumes:
+      - ../stage0_runbook_api/samples/runbooks:/workspace
+    working_dir: /workspace
+    command: runbook serve --runbooks-dir . --port 8083
+    profiles:
+      - api
+      - service
+
+  ##################################
+  # Stage0 Runbook SPA Service
+  ##################################
+  spa:
+    image: stage0_runbook_spa:latest
+    restart: no
+    ports:
+      - 8084:80
+    environment:
+      API_HOST: api
+      API_PORT: 8083
+    depends_on:
+      api:
+        condition: service_started
+    profiles:
+      - service
+

@@ -156,14 +156,13 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { marked } from 'marked'
 import { api, ApiError } from '@/api/client'
 import type { RunbookContent, ExecuteResponse, EnvVarInfo, RequiredEnvResponse } from '@/api/types'
 
 const route = useRoute()
-const router = useRouter()
 const queryClient = useQueryClient()
 
 const filename = computed(() => decodeURIComponent(route.params.filename as string))

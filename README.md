@@ -18,11 +18,14 @@ npm run build
 ## run dev server - captures command line
 npm run dev 
 
-## de down and start api container
+## Start API container (docker compose with 'api' profile)
 npm run api 
 
-## de down and start api + spa containers
+## Start API + SPA containers (docker compose with 'service' profile)
 npm run service 
+
+## Stop all containers (API and SPA)
+npm run down 
 
 ## Build SPA docker container locally
 npm run container 
