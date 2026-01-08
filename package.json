@@ -6,7 +6,7 @@
     "dev": "vite",
     "build": "vue-tsc && vite build",
     "preview": "vite preview",
-    "pull": "docker compose pull",
+    "pull": "docker compose --profile service pull",
     "api": "docker compose --profile api up -d",
     "service": "docker compose --profile service up -d && sleep 3 && npm run open",
     "down": "docker compose --profile api --profile service down",
