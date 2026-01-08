@@ -10,7 +10,7 @@
     "api": "docker compose --profile api up -d",
     "service": "docker compose --profile service up -d && sleep 3 && npm run open",
     "down": "docker compose --profile api --profile service down",
-    "container": "docker build -t stage0_runbook_spa:latest .",
+    "container": "docker build -t ghcr.io/agile-learning-institute/stage0_runbook_spa:latest .",
     "open": "open -a 'Google Chrome' 'http://localhost:8084' || google-chrome 'http://localhost:8084' || xdg-open 'http://localhost:8084' || echo 'Could not open browser. Please navigate to http://localhost:8084'"
   },
   "dependencies": {

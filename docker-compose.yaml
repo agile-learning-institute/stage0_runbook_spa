@@ -3,7 +3,7 @@ services:
   # Stage0 Runbook API Service
   ##################################
   api:
-    image: ghcr.io/agile-learning-institute/stage0_runner:latest
+    image: ghcr.io/agile-learning-institute/stage0_runbook_api:latest
     restart: no
     ports:
       - 8083:8083
@@ -22,7 +22,7 @@ services:
   # Stage0 Runbook SPA Service
   ##################################
   spa:
-    image: stage0_runbook_spa:latest
+    image: ghcr.io/agile-learning-institute/stage0_runbook_spa:latest
     restart: no
     ports:
       - 8084:80
