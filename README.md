@@ -1,6 +1,6 @@
 # stage0_runbook_spa
 
-This repository contains a Vue 3 single-page application (SPA) for the Stage0 Runbook utility. The SPA is backed by the RESTful [stage0_runbook_api](https://github.com/agile-learning-institute/stageZero/stage0_runbook_api). API contracts are defined in [This OpenAPI document](https://github.com/agile-learning-institute/stageZero/stage0_runbook_api/blob/main/docs/openapi.yaml). When the API is running, you can access an API Explorer at [/docs/explorer.html](http://localhost:8083/docs/explorer.html)
+This repository contains a Vue 3 single-page application (SPA) for the Stage0 Runbook utility. The SPA is backed by the RESTful [stage0_runbook_api](https://github.com/agile-learning-institute/stage0_runbook_api). API contracts are defined in an [This OpenAPI document](https://github.com/agile-learning-institute/stage0_runbook_api/blob/main/docs/openapi.yaml). When the API is running, you can access an API Explorer at [/docs/explorer.html](http://localhost:8083/docs/explorer.html)
 
 ## Prerequisites
 - Docker and Docker Compose
