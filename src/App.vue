@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-app-bar color="primary" prominent>
-      <v-app-bar-title>Stage0 Runbook Runner</v-app-bar-title>
+      <v-app-bar-title>Stage0 Runbook Automation</v-app-bar-title>
       <v-spacer />
       <v-btn
         icon="mdi-home"
