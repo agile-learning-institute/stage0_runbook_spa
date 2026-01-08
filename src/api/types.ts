@@ -42,3 +42,16 @@ export interface ValidateResponse {
   warnings: string[]
 }
 
+export interface EnvVarInfo {
+  name: string
+  description: string
+}
+
+export interface RequiredEnvResponse {
+  success: boolean
+  filename: string
+  required: EnvVarInfo[]
+  available: EnvVarInfo[]
+  missing: EnvVarInfo[]
+}
+

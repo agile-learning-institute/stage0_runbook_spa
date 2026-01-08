@@ -38,28 +38,54 @@
         <v-card-title>Execute Runbook</v-card-title>
         <v-card-text>
           <div class="mb-4">
-            <p class="text-body-1 mb-2">
-              Enter values for required environment variables:
-            </p>
-            <v-alert
-              v-if="requiredEnvVars.length === 0"
-              type="info"
-              variant="tonal"
-              class="mb-4"
-            >
-              This runbook does not require any environment variables.
-            </v-alert>
-            <v-text-field
-              v-for="envVar in requiredEnvVars"
-              :key="envVar.name"
-              v-model="envVarValues[envVar.name]"
-              :label="envVar.name"
-              :hint="envVar.description"
-              persistent-hint
-              variant="outlined"
-              class="mb-2"
-              :required="true"
-            />
+            <div v-if="isLoadingEnv" class="text-center pa-4">
+              <v-progress-circular indeterminate color="primary" />
+            </div>
+            <div v-else>
+              <p class="text-body-1 mb-2">
+                <span v-if="missingEnvVars.length > 0">
+                  Enter values for missing environment variables:
+                </span>
+                <span v-else>
+                  All required environment variables are already available.
+                </span>
+              </p>
+              
+              <v-alert
+                v-if="availableEnvVars.length > 0"
+                type="success"
+                variant="tonal"
+                class="mb-4"
+              >
+                <div class="text-subtitle-2 mb-2">Available environment variables:</div>
+                <ul class="mb-0">
+                  <li v-for="envVar in availableEnvVars" :key="envVar.name">
+                    <strong>{{ envVar.name }}</strong>: {{ envVar.description }}
+                  </li>
+                </ul>
+              </v-alert>
+              
+              <v-alert
+                v-if="missingEnvVars.length === 0"
+                type="info"
+                variant="tonal"
+                class="mb-4"
+              >
+                This runbook does not require any additional environment variables.
+              </v-alert>
+              
+              <v-text-field
+                v-for="envVar in missingEnvVars"
+                :key="envVar.name"
+                v-model="envVarValues[envVar.name]"
+                :label="envVar.name"
+                :hint="envVar.description"
+                persistent-hint
+                variant="outlined"
+                class="mb-2"
+                :required="true"
+              />
+            </div>
           </div>
         </v-card-text>
         <v-card-actions>
@@ -134,7 +160,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { marked } from 'marked'
 import { api, ApiError } from '@/api/client'
-import type { RunbookContent, ExecuteResponse } from '@/api/types'
+import type { RunbookContent, ExecuteResponse, EnvVarInfo, RequiredEnvResponse } from '@/api/types'
 
 const route = useRoute()
 const router = useRouter()
@@ -142,12 +168,9 @@ const queryClient = useQueryClient()
 
 const filename = computed(() => decodeURIComponent(route.params.filename as string))
 
-interface EnvVarInfo {
-  name: string
-  description: string
-}
-
 const requiredEnvVars = ref<EnvVarInfo[]>([])
+const availableEnvVars = ref<EnvVarInfo[]>([])
+const missingEnvVars = ref<EnvVarInfo[]>([])
 const envVarValues = ref<Record<string, string>>({})
 const showExecuteDialog = ref(false)
 const showResultDialog = ref(false)
@@ -162,60 +185,24 @@ const { data: runbook, isLoading, error, refetch } = useQuery<RunbookContent>({
 // Watch for filename changes
 watch(filename, (newFilename) => {
   queryClient.invalidateQueries({ queryKey: ['runbook', newFilename] })
+  queryClient.invalidateQueries({ queryKey: ['required-env', newFilename] })
 })
 
-// Extract environment requirements from runbook content
-const extractEnvRequirements = (content: string): EnvVarInfo[] => {
-  const envVars: EnvVarInfo[] = []
-  
-  // Find Environment Requirements section
-  const envSectionMatch = content.match(/^#\s+Environment Requirements\s*$/m)
-  if (!envSectionMatch) {
-    return envVars
-  }
-  
-  const startPos = envSectionMatch.index! + envSectionMatch[0].length
-  const nextSectionMatch = content.substring(startPos).match(/^#\s+/m)
-  const endPos = nextSectionMatch 
-    ? startPos + nextSectionMatch.index! 
-    : content.length
-  
-  const envSection = content.substring(startPos, endPos)
-  
-  // Find YAML code block
-  const yamlMatch = envSection.match(/```yaml\s*\n(.*?)```/s)
-  if (!yamlMatch) {
-    return envVars
-  }
-  
-  const yamlContent = yamlMatch[1].trim()
-  
-  // Parse YAML (simple parser for key: value pairs)
-  for (const line of yamlContent.split('\n')) {
-    const trimmed = line.trim()
-    if (!trimmed || trimmed.startsWith('#')) continue
-    
-    const colonIndex = trimmed.indexOf(':')
-    if (colonIndex === -1) continue
-    
-    const name = trimmed.substring(0, colonIndex).trim()
-    const description = trimmed.substring(colonIndex + 1).trim()
-    
-    if (name) {
-      envVars.push({ name, description })
-    }
-  }
-  
-  return envVars
-}
+// Fetch required environment variables
+const { data: requiredEnvData, isLoading: isLoadingEnv, refetch: refetchEnv } = useQuery<RequiredEnvResponse>({
+  queryKey: ['required-env', filename.value],
+  queryFn: () => api.getRequiredEnv(filename.value),
+})
 
-// Update required env vars when runbook content loads
-watch(runbook, (newRunbook) => {
-  if (newRunbook?.content) {
-    requiredEnvVars.value = extractEnvRequirements(newRunbook.content)
-    // Initialize env var values
+// Update env vars when data loads
+watch(requiredEnvData, (data) => {
+  if (data) {
+    requiredEnvVars.value = data.required || []
+    availableEnvVars.value = data.available || []
+    missingEnvVars.value = data.missing || []
+    // Initialize env var values for missing vars only
     envVarValues.value = {}
-    for (const envVar of requiredEnvVars.value) {
+    for (const envVar of missingEnvVars.value) {
       envVarValues.value[envVar.name] = ''
     }
   }
@@ -228,16 +215,18 @@ const renderedContent = computed(() => {
 })
 
 const canExecute = computed(() => {
-  if (requiredEnvVars.value.length === 0) return true
-  return requiredEnvVars.value.every(
+  if (missingEnvVars.value.length === 0) return true
+  return missingEnvVars.value.every(
     (envVar) => envVarValues.value[envVar.name]?.trim()
   )
 })
 
-function openExecuteDialog() {
-  // Reset env var values
+async function openExecuteDialog() {
+  // Refetch required env vars to get latest status
+  await refetchEnv()
+  // Reset env var values for missing vars
   envVarValues.value = {}
-  for (const envVar of requiredEnvVars.value) {
+  for (const envVar of missingEnvVars.value) {
     envVarValues.value[envVar.name] = ''
   }
   showExecuteDialog.value = true

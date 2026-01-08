@@ -3,6 +3,7 @@ import type {
   RunbookContent,
   ExecuteResponse,
   ValidateResponse,
+  RequiredEnvResponse,
   Error
 } from './types'
 
@@ -94,6 +95,10 @@ export const api = {
     return request<ValidateResponse>(`/${filename}${queryString}`, {
       method: 'PATCH',
     })
+  },
+
+  async getRequiredEnv(filename: string): Promise<RequiredEnvResponse> {
+    return request<RequiredEnvResponse>(`/${filename}/required-env`)
   },
 }
 
