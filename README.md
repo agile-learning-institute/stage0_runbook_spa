@@ -1,10 +1,16 @@
 # stage0_runbook_spa
 
-This repository contains a Vue 3 single-page application (SPA) for the [Stage0 Runbook Runner](https://github.com/agile-learning-institute/stageZero/stage0_runner). The SPA is backed by the RESTful [stage0_runbook_api](https://github.com/agile-learning-institute/stageZero/stage0_runbook_api) following a GET / POST / PATCH pattern. API contracts are defined in [This OpenAPI document](https://github.com/agile-learning-institute/stageZero/stage0_runbook_api/blob/main/docs/openapi.yaml). When the API is running, you can access an API Explorer at [/docs/explorer.html](http://localhost:8083/docs/explorer.html)
+This repository contains a Vue 3 single-page application (SPA) for the Stage0 Runbook utility. The SPA is backed by the RESTful [stage0_runbook_api](https://github.com/agile-learning-institute/stageZero/stage0_runbook_api). API contracts are defined in [This OpenAPI document](https://github.com/agile-learning-institute/stageZero/stage0_runbook_api/blob/main/docs/openapi.yaml). When the API is running, you can access an API Explorer at [/docs/explorer.html](http://localhost:8083/docs/explorer.html)
 
 ## Prerequisites
-- Creator Dashboard [Developers Edition](https://github.com/agile-crafts-people/CreatorDashboard/blob/main/DeveloperEdition/README.md)
-- Developer [SPA Standard Prerequisites](https://github.com/agile-crafts-people/CreatorDashboard/blob/main/DeveloperEdition/standards/spa_standards.md)
+- Docker and Docker Compose
+- Node.js (v20 or later) and npm
+
+## Quick Start
+```sh
+# Run the Runbook service (opens UI page)
+npm run service
+```
 
 ## Developer Commands
 
