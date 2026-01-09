@@ -4,16 +4,22 @@ services:
   ##################################
   api:
     image: ghcr.io/agile-learning-institute/stage0_runbook_api:latest
+    container_name: stage0_runbook_api
     restart: no
     ports:
-      - 8083:8083
+      - "8083:8083"
     environment:
       API_PORT: 8083
-      RUNBOOKS_DIR: .
-    volumes:
-      - ../stage0_runbook_api/samples/runbooks:/workspace
-    working_dir: /workspace
-    command: runbook serve --runbooks-dir . --port 8083
+      RUNBOOKS_DIR: ./runbooks
+      ENABLE_LOGIN: "true"
+      LOGGING_LEVEL: "INFO"
+    working_dir: /opt/stage0/runner
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8083/metrics')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     profiles:
       - api
       - service
@@ -23,15 +29,16 @@ services:
   ##################################
   spa:
     image: ghcr.io/agile-learning-institute/stage0_runbook_spa:latest
+    container_name: stage0_runbook_spa
     restart: no
     ports:
-      - 8084:80
+      - "8084:80"
     environment:
       API_HOST: api
       API_PORT: 8083
     depends_on:
       api:
-        condition: service_started
+        condition: service_healthy
     profiles:
       - service
 
