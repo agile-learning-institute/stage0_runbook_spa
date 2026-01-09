@@ -28,9 +28,9 @@ async function request<T>(
   options: RequestInit = {},
   requireAuth: boolean = true
 ): Promise<T> {
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
+    ...(options.headers as Record<string, string> || {}),
   }
 
   // Add Authorization header if authentication is required
@@ -108,8 +108,11 @@ async function requestWithoutAuth<T>(
 
 export const api = {
   // Authentication endpoints
+  // Note: dev-login always calls localhost:8083 directly (not proxied) for security
+  // This endpoint is only available in development environments and is intentionally
+  // not exposed through the /api proxy as a defense-in-depth measure
   async devLogin(requestData: DevLoginRequest = {}): Promise<DevLoginResponse> {
-    return requestWithoutAuth<DevLoginResponse>('/dev-login', {
+    return requestWithoutAuth<DevLoginResponse>('http://localhost:8083/dev-login', {
       method: 'POST',
       body: JSON.stringify(requestData),
     })

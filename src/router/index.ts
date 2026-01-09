@@ -31,7 +31,7 @@ const router = createRouter({
 })
 
 // Navigation guard to protect authenticated routes
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   const authStore = useAuthStore()
   
   // If route requires authentication and user is not authenticated, redirect to login

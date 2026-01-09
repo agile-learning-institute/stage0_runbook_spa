@@ -9,10 +9,11 @@ const EXPIRES_AT_KEY = 'stage0_runbook_expires_at'
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem(TOKEN_KEY))
   const subject = ref<string | null>(localStorage.getItem(SUBJECT_KEY))
-  const roles = ref<string[]>(() => {
+  const getInitialRoles = (): string[] => {
     const stored = localStorage.getItem(ROLES_KEY)
     return stored ? JSON.parse(stored) : []
-  })
+  }
+  const roles = ref<string[]>(getInitialRoles())
   const expiresAt = ref<string | null>(localStorage.getItem(EXPIRES_AT_KEY))
 
   const isAuthenticated = computed(() => {

@@ -45,9 +45,9 @@
                 <template #selection="{ item, index }">
                   <v-chip
                     v-if="index < 3"
-                    :key="item"
+                    :key="String(item)"
                     closable
-                    @click:close="roles = roles.filter((r: string) => r !== item)"
+                    @click:close="roles = roles.filter((r: string) => r !== String(item))"
                   >
                     {{ item }}
                   </v-chip>
