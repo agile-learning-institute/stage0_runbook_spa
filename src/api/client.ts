@@ -4,8 +4,11 @@ import type {
   ExecuteResponse,
   ValidateResponse,
   RequiredEnvResponse,
+  DevLoginRequest,
+  DevLoginResponse,
   Error
 } from './types'
+import { useAuthStore } from '@/stores/auth'
 
 const API_BASE = '/api'
 
@@ -22,17 +25,33 @@ class ApiError extends Error {
 
 async function request<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  requireAuth: boolean = true
 ): Promise<T> {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...options.headers,
   }
 
+  // Add Authorization header if authentication is required
+  if (requireAuth) {
+    const authStore = useAuthStore()
+    if (authStore.token) {
+      headers['Authorization'] = `Bearer ${authStore.token}`
+    }
+  }
+
   const response = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
     headers,
   })
+
+  // Handle 401 Unauthorized - token may be expired or invalid
+  if (response.status === 401 && requireAuth) {
+    const authStore = useAuthStore()
+    authStore.logout()
+    // Don't redirect here - let the router guard handle it
+  }
 
   if (!response.ok) {
     let errorData: Error | null = null
@@ -56,34 +75,62 @@ async function request<T>(
   return response.json()
 }
 
-function buildQueryString(params: Record<string, string>): string {
-  const searchParams = new URLSearchParams()
-  for (const [key, value] of Object.entries(params)) {
-    if (value) {
-      searchParams.append(key, value)
-    }
+async function requestWithoutAuth<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options.headers,
   }
-  const query = searchParams.toString()
-  return query ? `?${query}` : ''
+
+  const response = await fetch(endpoint, {
+    ...options,
+    headers,
+  })
+
+  if (!response.ok) {
+    let errorData: Error | null = null
+    try {
+      errorData = await response.json()
+    } catch {
+      // Ignore JSON parse errors
+    }
+    throw new ApiError(
+      errorData?.error || `HTTP ${response.status}: ${response.statusText}`,
+      response.status,
+      errorData || undefined
+    )
+  }
+
+  return response.json()
 }
 
 export const api = {
+  // Authentication endpoints
+  async devLogin(requestData: DevLoginRequest = {}): Promise<DevLoginResponse> {
+    return requestWithoutAuth<DevLoginResponse>('/dev-login', {
+      method: 'POST',
+      body: JSON.stringify(requestData),
+    })
+  },
+
   // Runbook endpoints
   async listRunbooks(): Promise<RunbookList> {
     return request<RunbookList>('/runbooks')
   },
 
   async getRunbook(filename: string): Promise<RunbookContent> {
-    return request<RunbookContent>(`/${filename}`)
+    return request<RunbookContent>(`/runbooks/${encodeURIComponent(filename)}`)
   },
 
   async executeRunbook(
     filename: string,
-    envVars: Record<string, string>
+    envVars: Record<string, string> = {}
   ): Promise<ExecuteResponse> {
-    const queryString = buildQueryString(envVars)
-    return request<ExecuteResponse>(`/${filename}${queryString}`, {
+    return request<ExecuteResponse>(`/runbooks/${encodeURIComponent(filename)}/execute`, {
       method: 'POST',
+      body: JSON.stringify({ env_vars: envVars }),
     })
   },
 
@@ -91,14 +138,14 @@ export const api = {
     filename: string,
     envVars: Record<string, string> = {}
   ): Promise<ValidateResponse> {
-    const queryString = buildQueryString(envVars)
-    return request<ValidateResponse>(`/${filename}${queryString}`, {
+    return request<ValidateResponse>(`/runbooks/${encodeURIComponent(filename)}/validate`, {
       method: 'PATCH',
+      body: JSON.stringify({ env_vars: envVars }),
     })
   },
 
   async getRequiredEnv(filename: string): Promise<RequiredEnvResponse> {
-    return request<RequiredEnvResponse>(`/${filename}/required-env`)
+    return request<RequiredEnvResponse>(`/runbooks/${encodeURIComponent(filename)}/required-env`)
   },
 }
 
