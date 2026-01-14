@@ -203,7 +203,7 @@ const executeMutation = useMutation({
     await nextTick()
     window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })
   },
-  onError: async (error: ApiError) => {
+  onError: async (_error: ApiError) => {
       showExecuteDialog.value = false
       // Refetch runbook to get updated content with history
       await refetch()
