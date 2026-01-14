@@ -6,6 +6,7 @@ import type {
   RequiredEnvResponse,
   DevLoginRequest,
   DevLoginResponse,
+  ConfigResponse,
   Error
 } from './types'
 import { useAuthStore } from '@/stores/auth'
@@ -149,6 +150,11 @@ export const api = {
 
   async getRequiredEnv(filename: string): Promise<RequiredEnvResponse> {
     return request<RequiredEnvResponse>(`/runbooks/${encodeURIComponent(filename)}/required-env`)
+  },
+
+  // Config endpoint
+  async getConfig(): Promise<ConfigResponse> {
+    return request<ConfigResponse>('/config')
   },
 }
 

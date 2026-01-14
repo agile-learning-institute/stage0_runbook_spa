@@ -67,3 +67,21 @@ export interface DevLoginResponse {
   subject: string
   roles: string[]
 }
+
+export interface ConfigItem {
+  name: string
+  value: string
+  from: 'default' | 'environment'
+}
+
+export interface TokenInfo {
+  user_id: string
+  roles: string[]
+  remote_ip: string
+  claims: Record<string, unknown>
+}
+
+export interface ConfigResponse {
+  config_items: ConfigItem[]
+  token: TokenInfo
+}
