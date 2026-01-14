@@ -9,6 +9,13 @@
           icon="mdi-home"
           variant="text"
           @click="router.push('/runbooks')"
+          title="Home"
+        />
+        <v-btn
+          icon="mdi-cog"
+          variant="text"
+          @click="router.push('/admin')"
+          title="Admin"
         />
         <v-btn
           icon="mdi-logout"

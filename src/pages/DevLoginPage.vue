@@ -34,7 +34,7 @@
               <v-combobox
                 v-model="roles"
                 label="Roles (optional)"
-                hint="Default: ['developer'] - Enter roles separated by commas or press Enter to add each role"
+                hint="Default: ['sre', 'data', 'api', 'ux'] - Enter roles separated by commas or press Enter to add each role"
                 persistent-hint
                 multiple
                 chips
@@ -82,28 +82,37 @@
                 variant="outlined"
                 size="small"
                 class="mr-2 mb-2"
-                @click="quickLogin(['developer'])"
+                @click="quickLogin(['sre'])"
                 :disabled="loginMutation.isPending.value"
               >
-                Developer
+                SRE
               </v-btn>
               <v-btn
                 variant="outlined"
                 size="small"
                 class="mr-2 mb-2"
-                @click="quickLogin(['developer', 'admin'])"
+                @click="quickLogin(['data'])"
                 :disabled="loginMutation.isPending.value"
               >
-                Developer + Admin
+                Data
+              </v-btn>
+              <v-btn
+                variant="outlined"
+                size="small"
+                class="mr-2 mb-2"
+                @click="quickLogin(['api'])"
+                :disabled="loginMutation.isPending.value"
+              >
+                API
               </v-btn>
               <v-btn
                 variant="outlined"
                 size="small"
                 class="mb-2"
-                @click="quickLogin(['viewer'])"
+                @click="quickLogin(['ux'])"
                 :disabled="loginMutation.isPending.value"
               >
-                Viewer
+                UX
               </v-btn>
             </div>
           </v-card-text>

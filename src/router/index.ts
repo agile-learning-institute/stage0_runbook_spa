@@ -26,6 +26,12 @@ const router = createRouter({
       component: () => import('@/pages/RunbookViewerPage.vue'),
       props: true,
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/admin',
+      name: 'Admin',
+      component: () => import('@/pages/AdminPage.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 })

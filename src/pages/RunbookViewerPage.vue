@@ -109,58 +109,16 @@
       </v-card>
     </v-dialog>
 
-    <!-- Execution Result Dialog -->
-    <v-dialog v-model="showResultDialog" max-width="800">
-      <v-card>
-        <v-card-title class="d-flex align-center">
-          <v-icon
-            :color="executionResult?.success ? 'success' : 'error'"
-            class="mr-2"
-          >
-            {{ executionResult?.success ? 'mdi-check-circle' : 'mdi-alert-circle' }}
-          </v-icon>
-          Execution {{ executionResult?.success ? 'Successful' : 'Failed' }}
-        </v-card-title>
-        <v-card-text>
-          <div class="mb-4">
-            <p><strong>Return Code:</strong> {{ executionResult?.return_code }}</p>
-          </div>
-          <v-expansion-panels v-if="executionResult">
-            <v-expansion-panel v-if="executionResult.stdout">
-              <v-expansion-panel-title>Standard Output</v-expansion-panel-title>
-              <v-expansion-panel-text>
-                <pre class="text-body-2">{{ executionResult.stdout }}</pre>
-              </v-expansion-panel-text>
-            </v-expansion-panel>
-            <v-expansion-panel v-if="executionResult.stderr">
-              <v-expansion-panel-title>Standard Error</v-expansion-panel-title>
-              <v-expansion-panel-text>
-                <pre class="text-body-2">{{ executionResult.stderr }}</pre>
-              </v-expansion-panel-text>
-            </v-expansion-panel>
-          </v-expansion-panels>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer />
-          <v-btn
-            color="primary"
-            @click="handleCloseResult"
-          >
-            Close
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
   </v-container>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { marked } from 'marked'
 import { api, ApiError } from '@/api/client'
-import type { RunbookContent, ExecuteResponse, EnvVarInfo, RequiredEnvResponse } from '@/api/types'
+import type { RunbookContent, EnvVarInfo, RequiredEnvResponse } from '@/api/types'
 
 const route = useRoute()
 const queryClient = useQueryClient()
@@ -172,8 +130,6 @@ const availableEnvVars = ref<EnvVarInfo[]>([])
 const missingEnvVars = ref<EnvVarInfo[]>([])
 const envVarValues = ref<Record<string, string>>({})
 const showExecuteDialog = ref(false)
-const showResultDialog = ref(false)
-const executionResult = ref<ExecuteResponse | null>(null)
 
 // Fetch runbook content
 const { data: runbook, isLoading, error, refetch } = useQuery<RunbookContent>({
@@ -239,26 +195,21 @@ function closeExecuteDialog() {
 const executeMutation = useMutation({
   mutationFn: (envVars: Record<string, string>) => 
     api.executeRunbook(filename.value, envVars),
-  onSuccess: (result) => {
-    executionResult.value = result
+  onSuccess: async () => {
     showExecuteDialog.value = false
-    showResultDialog.value = true
     // Refetch runbook to get updated content with history
-    refetch()
+    await refetch()
+    // Wait for DOM to update, then scroll to bottom
+    await nextTick()
+    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })
   },
-  onError: (error: ApiError) => {
-      executionResult.value = {
-        success: false,
-        runbook: filename.value,
-        return_code: error.status === 500 ? 1 : 1,
-        stdout: '',
-        stderr: error.message,
-        errors: [error.message],
-        warnings: [],
-        viewer_link: '',
-      }
+  onError: async (error: ApiError) => {
       showExecuteDialog.value = false
-      showResultDialog.value = true
+      // Refetch runbook to get updated content with history
+      await refetch()
+      // Wait for DOM to update, then scroll to bottom
+      await nextTick()
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })
     },
 })
 
@@ -276,10 +227,6 @@ function handleExecute() {
   executeMutation.mutate(envVars)
 }
 
-function handleCloseResult() {
-  showResultDialog.value = false
-  executionResult.value = null
-}
 </script>
 
 <style scoped>
