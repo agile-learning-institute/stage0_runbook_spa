@@ -102,3 +102,6 @@ When adding a new feature:
 
 ## Configuration
 - Docker container uses `API_HOST` and `API_PORT` environment variables for API proxy configuration
+
+## Support
+Need help - **Join us on Discord**: [Runbooks Support Channel](https://discord.gg/Pcs8yTXPuh)
