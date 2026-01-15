@@ -15,10 +15,12 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8083',
         changeOrigin: true
+      },
+      // Proxy /dev-login in development (always enabled in dev server)
+      '/dev-login': {
+        target: 'http://localhost:8083',
+        changeOrigin: true
       }
-      // Note: /dev-login is intentionally NOT proxied - it should be called directly
-      // at http://localhost:8083/dev-login. This is a security feature to prevent
-      // dev-login from being accessible through the SPA proxy in production.
     }
   }
 })
