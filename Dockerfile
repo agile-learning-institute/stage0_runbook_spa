@@ -18,7 +18,7 @@ FROM nginx:stable-alpine AS deploy
 # Default Environment Variable values
 ENV API_HOST=localhost
 ENV API_PORT=8083
-ENV IDP_LOGIN_URI=/login
+ENV IDP_LOGIN_URI=http://localhost:8084/login
 
 # Copy built assets from build stage to nginx serving directory
 COPY --from=build /app/dist /usr/share/nginx/html

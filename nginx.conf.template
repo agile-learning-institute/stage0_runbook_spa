@@ -56,7 +56,7 @@ server {
     }
 
     # IdP login redirect - static route that redirects to configured IdP
-    # Defaults to /login (internal route) if IDP_LOGIN_URI not set
+    # IDP_LOGIN_URI must be a full URI (e.g., http://localhost:8084/login or https://idp.example.com/login)
     location = /auth/login {
         return 302 ${IDP_LOGIN_URI}$is_args$args;
     }
