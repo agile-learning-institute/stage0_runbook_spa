@@ -42,9 +42,8 @@ router.beforeEach((to, _from, next) => {
   
   // If route requires authentication and user is not authenticated, redirect to login
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    // Redirect to /auth/login - nginx will forward this to the configured IdP
-    // If IDP_LOGIN_URI is set to an external URL, nginx redirects there
-    // If IDP_LOGIN_URI is /login (default), nginx redirects to internal login page
+    // Redirect to /auth/login - nginx (production) or Vite middleware (dev) will forward this
+    // to the configured IdP based on IDP_LOGIN_URI env var (defaults to /login)
     // This ensures a single code path that works for both internal and external IdP
     const returnUrl = encodeURIComponent(window.location.origin + to.fullPath)
     window.location.href = `/auth/login?return_url=${returnUrl}`

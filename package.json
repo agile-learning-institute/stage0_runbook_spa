@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "IDP_LOGIN_URI=http://localhost:8084/login vite",
     "build": "vue-tsc && vite build",
     "preview": "vite preview",
     "pull": "docker compose --profile service pull",
-    "api": "docker compose --profile api up -d",
-    "service": "docker compose --profile service up -d && sleep 3 && npm run open",
+    "api": "bash -c 'export JWT_SECRET=$(date +%s) && docker compose --profile api up -d'",
+    "service": "bash -c 'export JWT_SECRET=$(date +%s) && docker compose --profile service up -d && sleep 3 && npm run open'",
     "down": "docker compose --profile api --profile service down",
     "container": "docker build -t ghcr.io/agile-learning-institute/stage0_runbook_spa:latest .",
     "open": "open -a 'Google Chrome' 'http://localhost:8084' || google-chrome 'http://localhost:8084' || xdg-open 'http://localhost:8084' || echo 'Could not open browser. Please navigate to http://localhost:8084'"
