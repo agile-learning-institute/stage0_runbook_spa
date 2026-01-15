@@ -18,6 +18,7 @@ FROM nginx:stable-alpine AS deploy
 # Default Environment Variable values
 ENV API_HOST=localhost
 ENV API_PORT=8083
+ENV IDP_LOGIN_URI=/login
 
 # Copy built assets from build stage to nginx serving directory
 COPY --from=build /app/dist /usr/share/nginx/html
@@ -26,6 +27,6 @@ COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 # Expose port
 EXPOSE 80
 
-# Start nginx
+# Start nginx (uses default entrypoint which processes templates with envsubst)
 CMD ["nginx", "-g", "daemon off;"]
 

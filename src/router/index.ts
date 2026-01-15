@@ -42,7 +42,13 @@ router.beforeEach((to, _from, next) => {
   
   // If route requires authentication and user is not authenticated, redirect to login
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    next({ name: 'Login', query: { redirect: to.fullPath } })
+    // Redirect to /auth/login - nginx will forward this to the configured IdP
+    // If IDP_LOGIN_URI is set to an external URL, nginx redirects there
+    // If IDP_LOGIN_URI is /login (default), nginx redirects to internal login page
+    // This ensures a single code path that works for both internal and external IdP
+    const returnUrl = encodeURIComponent(window.location.origin + to.fullPath)
+    window.location.href = `/auth/login?return_url=${returnUrl}`
+    return // Don't call next() - we're doing a full redirect
   }
   // If user is authenticated and tries to access login page, redirect to runbooks
   else if (to.name === 'Login' && authStore.isAuthenticated) {

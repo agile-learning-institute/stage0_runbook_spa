@@ -109,11 +109,10 @@ async function requestWithoutAuth<T>(
 
 export const api = {
   // Authentication endpoints
-  // Note: dev-login always calls localhost:8083 directly (not proxied) for security
-  // This endpoint is only available in development environments and is intentionally
-  // not exposed through the /api proxy as a defense-in-depth measure
+  // Note: /dev-login is proxied through nginx when ENABLE_DEV_LOGIN_PROXY=true
+  // In production, this proxy is disabled (returns 404) for security
   async devLogin(requestData: DevLoginRequest = {}): Promise<DevLoginResponse> {
-    return requestWithoutAuth<DevLoginResponse>('http://localhost:8083/dev-login', {
+    return requestWithoutAuth<DevLoginResponse>('/dev-login', {
       method: 'POST',
       body: JSON.stringify(requestData),
     })
