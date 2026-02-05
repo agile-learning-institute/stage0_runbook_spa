@@ -74,7 +74,7 @@
                 This runbook does not require any additional environment variables.
               </v-alert>
               
-              <v-text-field
+              <v-textarea
                 v-for="envVar in missingEnvVars"
                 :key="envVar.name"
                 v-model="envVarValues[envVar.name]"
@@ -84,6 +84,8 @@
                 variant="outlined"
                 class="mb-2"
                 :required="true"
+                rows="3"
+                auto-grow
               />
             </div>
           </div>
