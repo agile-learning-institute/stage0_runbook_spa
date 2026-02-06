@@ -125,13 +125,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useMutation } from '@tanstack/vue-query'
+import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { api, ApiError } from '@/api/client'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const queryClient = useQueryClient()
 
 const subject = ref('')
 const roles = ref<string[]>([])
@@ -140,9 +141,12 @@ const error = ref<string | null>(null)
 const loginMutation = useMutation({
   mutationFn: (loginData: { subject?: string; roles?: string[] }) => 
     api.devLogin(loginData),
-  onSuccess: (response) => {
+  onSuccess: async (response) => {
     authStore.setAuth(response)
     error.value = null
+    // Prefetch config before navigating so the header displays the correct value
+    // without requiring a page reload
+    await queryClient.prefetchQuery({ queryKey: ['config'], queryFn: () => api.getConfig() })
     // Redirect to the original destination or runbooks list
     const redirect = route.query.redirect as string | undefined
     router.push(redirect || '/runbooks')
