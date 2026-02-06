@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-app-bar color="primary" prominent>
-      <v-app-bar-title>{{ uiHeader }}</v-app-bar-title>
+      <v-app-bar-title>{{ displayHeader }}</v-app-bar-title>
       <v-spacer />
       <template v-if="authStore.isAuthenticated">
         <span class="text-body-2 mr-4">User: {{ authStore.subject || 'Unknown' }}</span>
@@ -44,7 +44,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useQuery } from '@tanstack/vue-query'
 import { useAuthStore } from '@/stores/auth'
 import { api } from '@/api/client'
@@ -53,6 +53,7 @@ import type { ConfigResponse } from '@/api/types'
 const DEFAULT_UI_HEADER = 'Stage0 Runbook Automation'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 
 const { data: configData } = useQuery<ConfigResponse>({
@@ -64,6 +65,14 @@ const { data: configData } = useQuery<ConfigResponse>({
 const uiHeader = computed(() => {
   const item = configData.value?.config_items?.find((c) => c.name === 'UI_HEADER')
   return (item?.value?.trim() && item.value) || DEFAULT_UI_HEADER
+})
+
+const displayHeader = computed(() => {
+  // On the Dev login page when not authenticated, show minimal header only
+  if (route.name === 'Login' && !authStore.isAuthenticated) {
+    return 'Dev login'
+  }
+  return uiHeader.value
 })
 
 function handleLogout() {
