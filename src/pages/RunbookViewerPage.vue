@@ -33,7 +33,7 @@
     </v-row>
 
     <!-- Execute Dialog -->
-    <v-dialog v-model="showExecuteDialog" max-width="600">
+    <v-dialog v-model="showExecuteDialog" max-width="700" persistent>
       <v-card>
         <v-card-title>Execute Runbook</v-card-title>
         <v-card-text>
@@ -89,6 +89,10 @@
               />
             </div>
           </div>
+          <div v-if="executionLog" class="mt-4">
+            <div class="text-subtitle-2 mb-2">Execution output</div>
+            <pre class="execution-log">{{ executionLog }}</pre>
+          </div>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -132,6 +136,7 @@ const availableEnvVars = ref<EnvVarInfo[]>([])
 const missingEnvVars = ref<EnvVarInfo[]>([])
 const envVarValues = ref<Record<string, string>>({})
 const showExecuteDialog = ref(false)
+const executionLog = ref('')
 
 // Fetch runbook content
 const { data: runbook, isLoading, error, refetch } = useQuery<RunbookContent>({
@@ -179,13 +184,12 @@ const canExecute = computed(() => {
 })
 
 async function openExecuteDialog() {
-  // Refetch required env vars to get latest status
   await refetchEnv()
-  // Reset env var values for missing vars
   envVarValues.value = {}
   for (const envVar of missingEnvVars.value) {
     envVarValues.value[envVar.name] = ''
   }
+  executionLog.value = ''
   showExecuteDialog.value = true
 }
 
@@ -195,8 +199,10 @@ function closeExecuteDialog() {
 
 // Execute mutation
 const executeMutation = useMutation({
-  mutationFn: (envVars: Record<string, string>) => 
-    api.executeRunbook(filename.value, envVars),
+  mutationFn: (envVars: Record<string, string>) =>
+    api.executeRunbook(filename.value, envVars, (_event, data) => {
+      executionLog.value += data
+    }),
   onSuccess: async () => {
     showExecuteDialog.value = false
     // Refetch runbook to get updated content with history
@@ -217,15 +223,13 @@ const executeMutation = useMutation({
 
 function handleExecute() {
   if (!canExecute.value) return
-  
-  // Filter out empty values
+  executionLog.value = ''
   const envVars: Record<string, string> = {}
   for (const [key, value] of Object.entries(envVarValues.value)) {
     if (value?.trim()) {
       envVars[key] = value.trim()
     }
   }
-  
   executeMutation.mutate(envVars)
 }
 
@@ -235,6 +239,19 @@ function handleExecute() {
 .runbook-content {
   max-width: 100%;
   overflow-x: auto;
+}
+
+.execution-log {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 1rem;
+  border-radius: 4px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.85rem;
+  max-height: 300px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
 .markdown-body {

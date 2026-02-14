@@ -107,6 +107,39 @@ async function requestWithoutAuth<T>(
   return response.json()
 }
 
+async function parseSSEResponse(
+  response: Response,
+  onChunk?: (event: 'stdout' | 'stderr', data: string) => void
+): Promise<ExecuteResponse> {
+  const reader = response.body?.getReader()
+  const decoder = new TextDecoder()
+  if (!reader) throw new ApiError('No response body', 500)
+  let buffer = ''
+  let result: ExecuteResponse | null = null
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    const events = buffer.split(/\n\n+/)
+    buffer = events.pop() || ''
+    for (const eventStr of events) {
+      const lines = eventStr.split('\n')
+      let eventType = ''
+      const dataLines: string[] = []
+      for (const line of lines) {
+        if (line.startsWith('event: ')) eventType = line.slice(7).trim()
+        else if (line.startsWith('data: ')) dataLines.push(line.slice(6))
+      }
+      const data = dataLines.join('\n')
+      if (eventType === 'stdout' && onChunk) onChunk('stdout', data)
+      else if (eventType === 'stderr' && onChunk) onChunk('stderr', data)
+      else if (eventType === 'done') result = JSON.parse(data) as ExecuteResponse
+    }
+  }
+  if (!result) throw new ApiError('No done event in stream', 500)
+  return result
+}
+
 export const api = {
   // Authentication endpoints
   // Note: /dev-login is proxied through nginx when ENABLE_DEV_LOGIN_PROXY=true
@@ -129,12 +162,40 @@ export const api = {
 
   async executeRunbook(
     filename: string,
-    envVars: Record<string, string> = {}
+    envVars: Record<string, string> = {},
+    onChunk?: (event: 'stdout' | 'stderr', data: string) => void
   ): Promise<ExecuteResponse> {
-    return request<ExecuteResponse>(`/runbooks/${encodeURIComponent(filename)}/execute`, {
+    const authStore = useAuthStore()
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(authStore.token ? { Authorization: `Bearer ${authStore.token}` } : {}),
+    }
+    const response = await fetch(`${API_BASE}/runbooks/${encodeURIComponent(filename)}/execute`, {
       method: 'POST',
+      headers,
       body: JSON.stringify({ env_vars: envVars }),
     })
+    if (!response.ok) {
+      let errorData: Error | null = null
+      try {
+        errorData = await response.json()
+      } catch {
+        /* ignore */
+      }
+      throw new ApiError(
+        errorData?.error || `HTTP ${response.status}: ${response.statusText}`,
+        response.status,
+        errorData || undefined
+      )
+    }
+    if (response.status === 401 && authStore.token) {
+      authStore.logout()
+    }
+    const contentType = response.headers.get('content-type') || ''
+    if (contentType.includes('text/event-stream')) {
+      return parseSSEResponse(response, onChunk)
+    }
+    return response.json()
   },
 
   async validateRunbook(
