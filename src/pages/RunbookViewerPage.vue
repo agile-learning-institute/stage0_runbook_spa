@@ -33,7 +33,7 @@
     </v-row>
 
     <!-- Execute Dialog -->
-    <v-dialog v-model="showExecuteDialog" max-width="700" persistent>
+    <v-dialog v-model="showExecuteDialog" max-width="70vw" persistent>
       <v-card>
         <v-card-title>Execute Runbook</v-card-title>
         <v-card-text>
@@ -91,7 +91,7 @@
           </div>
           <div v-if="executionLog" class="mt-4">
             <div class="text-subtitle-2 mb-2">Execution output</div>
-            <pre class="execution-log">{{ executionLog }}</pre>
+            <pre ref="executionLogEl" class="execution-log">{{ executionLog }}</pre>
           </div>
         </v-card-text>
         <v-card-actions>
@@ -137,6 +137,7 @@ const missingEnvVars = ref<EnvVarInfo[]>([])
 const envVarValues = ref<Record<string, string>>({})
 const showExecuteDialog = ref(false)
 const executionLog = ref('')
+const executionLogEl = ref<HTMLElement | null>(null)
 
 // Fetch runbook content
 const { data: runbook, isLoading, error, refetch } = useQuery<RunbookContent>({
@@ -200,8 +201,10 @@ function closeExecuteDialog() {
 // Execute mutation
 const executeMutation = useMutation({
   mutationFn: (envVars: Record<string, string>) =>
-    api.executeRunbook(filename.value, envVars, (_event, data) => {
+    api.executeRunbook(filename.value, envVars, async (_event, data) => {
       executionLog.value += data
+      await nextTick()
+      executionLogEl.value?.scrollTo({ top: executionLogEl.value.scrollHeight, behavior: 'auto' })
     }),
   onSuccess: async () => {
     showExecuteDialog.value = false
